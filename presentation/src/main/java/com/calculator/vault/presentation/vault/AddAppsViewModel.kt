@@ -6,6 +6,7 @@ import com.calculator.vault.domain.model.InstalledApp
 import com.calculator.vault.domain.model.VaultApp
 import com.calculator.vault.domain.usecase.AddAppToVaultUseCase
 import com.calculator.vault.domain.usecase.GetInstalledAppsUseCase
+import com.calculator.vault.domain.usecase.ObservePremiumStatusUseCase
 import com.calculator.vault.domain.usecase.ObserveVaultAppsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +22,8 @@ data class AddAppsUiState(
     val searchQuery: String = "",
     val isLoading: Boolean = true,
     val addedPackageName: String? = null,
+    val isPremium: Boolean = false,
+    val limitMessage: String? = null,
 )
 
 @HiltViewModel
@@ -28,6 +31,7 @@ class AddAppsViewModel @Inject constructor(
     private val getInstalledAppsUseCase: GetInstalledAppsUseCase,
     private val addAppToVaultUseCase: AddAppToVaultUseCase,
     private val observeVaultAppsUseCase: ObserveVaultAppsUseCase,
+    private val observePremiumStatusUseCase: ObservePremiumStatusUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddAppsUiState())
@@ -39,6 +43,11 @@ class AddAppsViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(vaultPackageNames = vaultApps.map { app -> app.packageName }.toSet())
                 }
+            }
+        }
+        viewModelScope.launch {
+            observePremiumStatusUseCase().collect { status ->
+                _uiState.update { it.copy(isPremium = status.isPremium) }
             }
         }
         loadApps()
@@ -56,15 +65,22 @@ class AddAppsViewModel @Inject constructor(
         }
     }
 
-    fun addApp(app: InstalledApp) {
+    fun addApp(app: InstalledApp, freeLimit: Int = 3) {
         viewModelScope.launch {
-            addAppToVaultUseCase(
-                VaultApp(
-                    packageName = app.packageName,
-                    appName = app.appName,
-                ),
-            )
-            _uiState.update { it.copy(addedPackageName = app.packageName) }
+            when (addAppToVaultUseCase(VaultApp(packageName = app.packageName, appName = app.appName), freeLimit)) {
+                AddAppToVaultUseCase.Result.Added -> {
+                    _uiState.update {
+                        it.copy(addedPackageName = app.packageName, limitMessage = null)
+                    }
+                }
+                AddAppToVaultUseCase.Result.LimitReached -> {
+                    _uiState.update {
+                        it.copy(
+                            limitMessage = "Free plan supports up to $freeLimit protected apps. Upgrade to Premium for unlimited storage.",
+                        )
+                    }
+                }
+            }
         }
     }
 

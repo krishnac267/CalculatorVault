@@ -29,3 +29,20 @@ data class IntruderLogEntity(
     val photoPath: String?,
     val attemptCount: Int,
 )
+
+@Entity(tableName = "secure_notes")
+data class SecureNoteEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val title: String,
+    val body: String,
+    val createdAt: Long,
+    val updatedAt: Long,
+)
+
+@Entity(tableName = "secure_bookmarks")
+data class SecureBookmarkEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val title: String,
+    val url: String,
+    val createdAt: Long,
+)

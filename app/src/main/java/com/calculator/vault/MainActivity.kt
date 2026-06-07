@@ -1,6 +1,7 @@
 package com.calculator.vault
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -14,6 +15,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.calculator.vault.domain.usecase.CheckSessionExpiredUseCase
 import com.calculator.vault.domain.usecase.LockSessionUseCase
+import com.calculator.vault.monetization.BillingManager
 import com.calculator.vault.presentation.navigation.VaultNavHost
 import com.calculator.vault.presentation.navigation.VaultNavigationManager
 import com.calculator.vault.presentation.theme.CalculatorVaultTheme
@@ -25,10 +27,15 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : FragmentActivity() {
 
+    companion object {
+        const val EXTRA_FROM_LAUNCHER = "extra_from_launcher"
+    }
+
     @Inject lateinit var checkSessionExpiredUseCase: CheckSessionExpiredUseCase
     @Inject lateinit var lockSessionUseCase: LockSessionUseCase
     @Inject lateinit var vaultNavigationManager: VaultNavigationManager
     @Inject lateinit var intruderCaptureCoordinator: IntruderCaptureCoordinator
+    @Inject lateinit var billingManager: BillingManager
 
     private val cameraPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -37,6 +44,7 @@ class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        billingManager.startConnection()
         intruderCaptureCoordinator.lifecycleOwner = this
         intruderCaptureCoordinator.hasCameraPermission = {
             ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
@@ -49,6 +57,18 @@ class MainActivity : FragmentActivity() {
                     VaultNavHost()
                 }
             }
+        }
+
+        if (intent.getBooleanExtra(EXTRA_FROM_LAUNCHER, false)) {
+            lockVaultImmediately()
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.getBooleanExtra(EXTRA_FROM_LAUNCHER, false)) {
+            lockVaultImmediately()
         }
     }
 
@@ -64,6 +84,13 @@ class MainActivity : FragmentActivity() {
         enforceSessionLockIfExpired()
     }
 
+    override fun onStop() {
+        super.onStop()
+        if (!isChangingConfigurations) {
+            lockVaultImmediately()
+        }
+    }
+
     private fun maybeRequestCameraPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
             != PackageManager.PERMISSION_GRANTED
@@ -75,9 +102,15 @@ class MainActivity : FragmentActivity() {
     private fun enforceSessionLockIfExpired() {
         lifecycleScope.launch {
             if (checkSessionExpiredUseCase()) {
-                lockSessionUseCase()
-                vaultNavigationManager.requestLockVault()
+                lockVaultImmediately()
             }
+        }
+    }
+
+    private fun lockVaultImmediately() {
+        lifecycleScope.launch {
+            lockSessionUseCase()
+            vaultNavigationManager.requestLockVault()
         }
     }
 }

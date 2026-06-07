@@ -78,6 +78,10 @@ class SettingsViewModel @Inject constructor(
         updateSettings { it.copy(intruderCaptureEnabled = enabled) }
     }
 
+    fun onLauncherModeEnabledChange(enabled: Boolean) {
+        updateSettings { it.copy(launcherModeEnabled = enabled) }
+    }
+
     fun onSessionTimeoutChange(minutes: Int) {
         updateSettings { it.copy(sessionTimeoutMinutes = minutes.coerceIn(1, 60)) }
     }

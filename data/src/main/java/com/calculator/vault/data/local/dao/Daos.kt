@@ -6,6 +6,8 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.calculator.vault.data.local.entity.FakeContentEntity
 import com.calculator.vault.data.local.entity.IntruderLogEntity
+import com.calculator.vault.data.local.entity.SecureBookmarkEntity
+import com.calculator.vault.data.local.entity.SecureNoteEntity
 import com.calculator.vault.data.local.entity.VaultAppEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -73,4 +75,43 @@ interface IntruderLogDao {
 
     @Query("DELETE FROM intruder_logs")
     suspend fun clearAll()
+}
+
+@Dao
+interface SecureNoteDao {
+    @Query("SELECT * FROM secure_notes ORDER BY updatedAt DESC")
+    fun observeAll(): Flow<List<SecureNoteEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(note: SecureNoteEntity): Long
+
+    @Query("DELETE FROM secure_notes WHERE id = :id")
+    suspend fun delete(id: Long)
+
+    @Query("SELECT * FROM secure_notes WHERE title LIKE '%' || :query || '%' OR body LIKE '%' || :query || '%' ORDER BY updatedAt DESC")
+    suspend fun search(query: String): List<SecureNoteEntity>
+
+    @Query("SELECT * FROM secure_notes")
+    suspend fun getAll(): List<SecureNoteEntity>
+
+    @Query("DELETE FROM secure_notes")
+    suspend fun deleteAll()
+}
+
+@Dao
+interface SecureBookmarkDao {
+    @Query("SELECT * FROM secure_bookmarks ORDER BY createdAt DESC")
+    fun observeAll(): Flow<List<SecureBookmarkEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(bookmark: SecureBookmarkEntity): Long
+
+    @Query("DELETE FROM secure_bookmarks WHERE id = :id")
+    suspend fun delete(id: Long)
+
+    @Query("SELECT * FROM secure_bookmarks")
+    suspend fun getAll(): List<SecureBookmarkEntity>
+
+    @Query("DELETE FROM secure_bookmarks")
+    suspend fun deleteAll()
 }

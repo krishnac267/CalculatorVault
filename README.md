@@ -54,8 +54,8 @@ Workflow: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 
 Debug build for sideloading (API 26+):
 
-- **GitHub Release:** [v1.0.0-debug](https://github.com/krishnac267/CalculatorVault/releases/tag/v1.0.0-debug)
-- **In repo:** [`releases/CalculatorVault-v1.0.0-debug.apk`](releases/CalculatorVault-v1.0.0-debug.apk)
+- **GitHub Release:** [v1.1.0-debug](https://github.com/krishnac267/CalculatorVault/releases/tag/v1.1.0-debug)
+- **In repo:** [`releases/CalculatorVault-v1.1.0-debug.apk`](releases/CalculatorVault-v1.1.0-debug.apk)
 
 Package ID: `com.calculator.vault.debug`
 
@@ -88,7 +88,7 @@ After **3 failed PIN attempts**, an intruder log entry is created (front camera 
 ## Permissions
 
 - `CAMERA` — Intruder photo capture (optional, runtime)
-- `QUERY_ALL_PACKAGES` — List installed apps to add to vault
+- Package visibility via `<queries>` — List launchable apps to add to vault (Android 11+)
 
 ## Important Notes
 

@@ -14,10 +14,17 @@ android {
         applicationId = "com.calculator.vault"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
         testInstrumentationRunner = "com.calculator.vault.HiltTestRunner"
         testInstrumentationRunnerArguments["clearPackageData"] = "true"
+
+        buildConfigField("String", "BANNER_AD_UNIT_ID", "\"ca-app-pub-3940256099942544/6300978111\"")
+        buildConfigField("String", "NATIVE_AD_UNIT_ID", "\"ca-app-pub-3940256099942544/2247696110\"")
+        buildConfigField("String", "PREMIUM_MONTHLY_ID", "\"premium_monthly\"")
+        buildConfigField("String", "PREMIUM_YEARLY_ID", "\"premium_yearly\"")
+        buildConfigField("String", "PREMIUM_LIFETIME_ID", "\"premium_lifetime\"")
+        buildConfigField("int", "FREE_VAULT_APP_LIMIT", "3")
     }
 
     buildTypes {
@@ -33,8 +40,25 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            // Configure release signing in Android Studio: Build > Generate Signed Bundle/APK
-            signingConfig = signingConfigs.getByName("debug")
+            val releaseStoreFile = project.findProperty("RELEASE_STORE_FILE") as String?
+            val releaseStorePassword = project.findProperty("RELEASE_STORE_PASSWORD") as String?
+            val releaseKeyAlias = project.findProperty("RELEASE_KEY_ALIAS") as String?
+            val releaseKeyPassword = project.findProperty("RELEASE_KEY_PASSWORD") as String?
+            if (
+                releaseStoreFile != null &&
+                releaseStorePassword != null &&
+                releaseKeyAlias != null &&
+                releaseKeyPassword != null
+            ) {
+                signingConfig = signingConfigs.create("release") {
+                    storeFile = file(releaseStoreFile)
+                    storePassword = releaseStorePassword
+                    keyAlias = releaseKeyAlias
+                    keyPassword = releaseKeyPassword
+                }
+            } else {
+                signingConfig = signingConfigs.getByName("debug")
+            }
         }
     }
 
@@ -55,6 +79,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     testOptions {
@@ -85,6 +110,11 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.play.billing)
+    implementation(libs.play.services.ads)
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.testrules)

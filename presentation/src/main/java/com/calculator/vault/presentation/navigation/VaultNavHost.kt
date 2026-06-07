@@ -16,6 +16,8 @@ import androidx.navigation.navArgument
 import com.calculator.vault.domain.model.VaultSessionState
 import com.calculator.vault.presentation.calculator.CalculatorScreen
 import com.calculator.vault.presentation.intruder.IntruderLogScreen
+import com.calculator.vault.presentation.notes.SecureNotesScreen
+import com.calculator.vault.presentation.premium.PremiumScreen
 import com.calculator.vault.presentation.settings.SettingsScreen
 import com.calculator.vault.presentation.setup.SetupScreen
 import com.calculator.vault.presentation.vault.AddAppsScreen
@@ -117,6 +119,12 @@ fun VaultNavHost(
                 onNavigateToIntruderLog = {
                     if (!isFakeVault) navController.navigate(NavRoutes.INTRUDER_LOG)
                 },
+                onNavigateToNotes = {
+                    if (!isFakeVault) navController.navigate(NavRoutes.SECURE_NOTES)
+                },
+                onNavigateToPremium = {
+                    if (!isFakeVault) navController.navigate(NavRoutes.PREMIUM)
+                },
                 onLockVault = { navigateToCalculator() },
             )
         }
@@ -131,6 +139,14 @@ fun VaultNavHost(
 
         composable(NavRoutes.INTRUDER_LOG) {
             IntruderLogScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        composable(NavRoutes.SECURE_NOTES) {
+            SecureNotesScreen(onNavigateBack = { navController.popBackStack() })
+        }
+
+        composable(NavRoutes.PREMIUM) {
+            PremiumScreen(onNavigateBack = { navController.popBackStack() })
         }
     }
 }

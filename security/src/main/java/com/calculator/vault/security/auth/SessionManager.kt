@@ -24,6 +24,8 @@ class SessionManager @Inject constructor(
         refresh()
     }
 
+    fun isUnlocked(): Boolean = _sessionState.value != VaultSessionState.LOCKED
+
     fun lock() {
         _sessionState.value = VaultSessionState.LOCKED
     }

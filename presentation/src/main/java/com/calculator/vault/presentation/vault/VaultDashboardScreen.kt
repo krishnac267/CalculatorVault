@@ -1,5 +1,6 @@
 package com.calculator.vault.presentation.vault
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -62,11 +63,19 @@ fun VaultDashboardScreen(
     onNavigateToAddApps: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToIntruderLog: () -> Unit,
+    onNavigateToNotes: () -> Unit = {},
+    onNavigateToPremium: () -> Unit = {},
     onLockVault: () -> Unit,
+    bannerAdUnitId: String? = null,
+    showAds: Boolean = false,
     viewModel: VaultViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var searchExpanded by rememberSaveable { mutableStateOf(false) }
+
+    BackHandler(enabled = !isFakeVault) {
+        viewModel.lockVault(onLockVault)
+    }
 
     SecureScreenEffect()
 
@@ -130,6 +139,8 @@ fun VaultDashboardScreen(
                         onNavigateToSettings = onNavigateToSettings,
                         onNavigateToAddApps = onNavigateToAddApps,
                         onNavigateToIntruderLog = onNavigateToIntruderLog,
+                        onNavigateToNotes = onNavigateToNotes,
+                        onNavigateToPremium = onNavigateToPremium,
                         onLockVault = { viewModel.lockVault(onLockVault) },
                     )
                     else -> {
@@ -230,20 +241,22 @@ private fun VaultSettingsTab(
     onNavigateToSettings: () -> Unit,
     onNavigateToAddApps: () -> Unit,
     onNavigateToIntruderLog: () -> Unit,
+    onNavigateToNotes: () -> Unit,
+    onNavigateToPremium: () -> Unit,
     onLockVault: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         GlassCard(modifier = Modifier.fillMaxWidth()) {
             Text(
-                text = if (isFakeVault) "Decoy vault mode" else "Real vault mode",
+                text = if (isFakeVault) "Decoy vault mode" else "Privacy vault",
                 style = MaterialTheme.typography.titleMedium,
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = if (isFakeVault) {
-                    "Showing decoy content. Wrong PIN entries won't reveal hidden apps."
+                    "Showing decoy content. Wrong PIN entries won't reveal your protected apps."
                 } else {
-                    "Your hidden apps are stored securely behind the calculator PIN."
+                    "Apps added to the vault are protected behind your PIN and private vault experience."
                 },
                 color = VaultTextSecondary,
             )
@@ -257,6 +270,9 @@ private fun VaultSettingsTab(
             Icon(Icons.Default.Add, contentDescription = null)
             Text("Add apps to vault", modifier = Modifier.padding(start = 8.dp))
         }
+        OutlinedButton(onClick = onNavigateToNotes, modifier = Modifier.fillMaxWidth(), enabled = !isFakeVault) {
+            Text("Private notes")
+        }
         OutlinedButton(
             onClick = onNavigateToSettings,
             modifier = Modifier.fillMaxWidth().testTag(TestTags.VAULT_SECURITY_SETTINGS),
@@ -267,6 +283,9 @@ private fun VaultSettingsTab(
         }
         OutlinedButton(onClick = onNavigateToIntruderLog, modifier = Modifier.fillMaxWidth(), enabled = !isFakeVault) {
             Text("Intruder log")
+        }
+        OutlinedButton(onClick = onNavigateToPremium, modifier = Modifier.fillMaxWidth(), enabled = !isFakeVault) {
+            Text("Upgrade to Premium")
         }
         OutlinedButton(onClick = onLockVault, modifier = Modifier.fillMaxWidth()) {
             Icon(Icons.Default.Lock, contentDescription = null)

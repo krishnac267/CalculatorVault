@@ -1,5 +1,7 @@
 package com.calculator.vault.presentation.settings
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -37,6 +40,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.calculator.vault.presentation.components.GlassCard
 import com.calculator.vault.presentation.components.SecureScreenEffect
+import com.calculator.vault.presentation.launcher.LauncherHomeRole
 import com.calculator.vault.presentation.theme.VaultTextSecondary
 import com.calculator.vault.presentation.testing.TestTags
 
@@ -47,6 +51,10 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val homeRoleLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) { /* system updates default home */ }
 
     SecureScreenEffect()
 
@@ -144,13 +152,32 @@ fun SettingsScreen(
                 Text("Launcher mode", style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = if (uiState.settings.launcherModeEnabled) {
-                        "Launcher mode is enabled. Calculator Vault can act as a home screen."
-                    } else {
-                        "Launcher mode is disabled. Enable in system settings to use as a home app."
-                    },
+                    text = "When set as your home app, vault apps are hidden from this launcher grid. " +
+                        "They remain accessible only through the calculator vault after PIN entry.",
                     color = VaultTextSecondary,
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+                ToggleRow(
+                    label = "Enable launcher mode",
+                    checked = uiState.settings.launcherModeEnabled,
+                    onCheckedChange = { enabled ->
+                        viewModel.onLauncherModeEnabledChange(enabled)
+                        if (enabled && !LauncherHomeRole.isDefaultHomeApp(context)) {
+                            LauncherHomeRole.createRequestIntent(context)?.let { homeRoleLauncher.launch(it) }
+                        }
+                    },
+                    modifier = Modifier.testTag(TestTags.SETTINGS_LAUNCHER_MODE),
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = {
+                        LauncherHomeRole.createRequestIntent(context)?.let { homeRoleLauncher.launch(it) }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = uiState.settings.launcherModeEnabled,
+                ) {
+                    Text("Set as default home app")
+                }
             }
 
             GlassCard(modifier = Modifier.fillMaxWidth()) {

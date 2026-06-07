@@ -5,6 +5,8 @@ import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import com.calculator.vault.data.local.dao.FakeContentDao
+import com.calculator.vault.data.local.dao.SecureBookmarkDao
+import com.calculator.vault.data.local.dao.SecureNoteDao
 import com.calculator.vault.data.local.dao.VaultAppDao
 import com.calculator.vault.data.mapper.toDomain
 import com.calculator.vault.data.mapper.toEntity
@@ -31,6 +33,8 @@ class SecurityRepositoryImpl @Inject constructor(
     private val sessionManager: SessionManager,
     private val vaultAppDao: VaultAppDao,
     private val fakeContentDao: FakeContentDao,
+    private val secureNoteDao: SecureNoteDao,
+    private val secureBookmarkDao: SecureBookmarkDao,
     private val gson: Gson,
 ) : SecurityRepository {
 
@@ -112,6 +116,8 @@ class SecurityRepositoryImpl @Inject constructor(
         settings = buildSettings(),
         vaultApps = vaultAppDao.getAll().map { it.toDomain() },
         fakeContent = fakeContentDao.getAll().map { it.toDomain() },
+        secureNotes = secureNoteDao.getAll().map { it.toDomain() },
+        secureBookmarks = secureBookmarkDao.getAll().map { it.toDomain() },
     )
 
     override suspend fun importBackup(backup: VaultBackup, pin: String): Boolean {
@@ -122,6 +128,10 @@ class SecurityRepositoryImpl @Inject constructor(
         if (backup.fakeContent.isNotEmpty()) {
             fakeContentDao.insertAll(backup.fakeContent.map { it.toEntity() })
         }
+        secureNoteDao.deleteAll()
+        backup.secureNotes.forEach { secureNoteDao.upsert(it.toEntity()) }
+        secureBookmarkDao.deleteAll()
+        backup.secureBookmarks.forEach { secureBookmarkDao.upsert(it.toEntity()) }
         updateSettings(backup.settings)
         return true
     }

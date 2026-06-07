@@ -4,6 +4,9 @@ import com.calculator.vault.domain.model.FakeContent
 import com.calculator.vault.domain.model.InstalledApp
 import com.calculator.vault.domain.model.IntruderLog
 import com.calculator.vault.domain.model.PinValidationResult
+import com.calculator.vault.domain.model.PremiumStatus
+import com.calculator.vault.domain.model.SecureBookmark
+import com.calculator.vault.domain.model.SecureNote
 import com.calculator.vault.domain.model.SecuritySettings
 import com.calculator.vault.domain.model.VaultApp
 import com.calculator.vault.domain.model.VaultBackup
@@ -63,3 +66,29 @@ interface InstalledAppRepository {
     suspend fun getLaunchableApps(): List<InstalledApp>
     suspend fun launchApp(packageName: String)
 }
+
+interface SecureNoteRepository {
+    fun observeNotes(): Flow<List<SecureNote>>
+    suspend fun upsert(note: SecureNote): Long
+    suspend fun delete(id: Long)
+    suspend fun search(query: String): List<SecureNote>
+}
+
+interface SecureBookmarkRepository {
+    fun observeBookmarks(): Flow<List<SecureBookmark>>
+    suspend fun upsert(bookmark: SecureBookmark): Long
+    suspend fun delete(id: Long)
+}
+
+interface PremiumRepository {
+    fun observePremiumStatus(): Flow<PremiumStatus>
+    suspend fun getPremiumStatus(): PremiumStatus
+    suspend fun setPremiumStatus(status: PremiumStatus)
+    suspend fun canAddMoreVaultApps(currentCount: Int, freeLimit: Int): Boolean
+}
+
+interface AnalyticsTracker {
+    fun logEvent(name: String, params: Map<String, String> = emptyMap())
+    fun setUserProperty(name: String, value: String)
+}
+

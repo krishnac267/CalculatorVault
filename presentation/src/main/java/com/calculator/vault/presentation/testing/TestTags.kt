@@ -28,6 +28,13 @@ object TestTags {
     const val SETTINGS_CHANGE_PIN = "settings_change_pin"
     const val SETTINGS_SESSION_TIMEOUT = "settings_session_timeout"
     const val SETTINGS_INTRUDER = "settings_intruder"
+    const val SETTINGS_LAUNCHER_MODE = "settings_launcher_mode"
+    const val LAUNCHER_HIDDEN_BANNER = "launcher_hidden_banner"
+    const val LAUNCHER_VAULT_LOCK = "launcher_vault_lock"
+    const val LAUNCHER_APP_GRID = "launcher_app_grid"
+
+    fun launcherApp(packageName: String): String =
+        "launcher_app_${packageName.replace('.', '_')}"
 }
 
 private fun String.toTestTagKey(): String = when (this) {

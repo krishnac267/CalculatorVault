@@ -20,5 +20,11 @@
 # EncryptedSharedPreferences / Security Crypto
 -keep class androidx.security.crypto.** { *; }
 
-# Keep line numbers for crash reports
--keepattributes SourceFile,LineNumberTable
+# SQLCipher
+-keep class net.sqlcipher.** { *; }
+-dontwarn net.sqlcipher.**
+
+# Firebase / Ads / Billing
+-keep class com.google.android.gms.** { *; }
+-keep class com.google.firebase.** { *; }
+-dontwarn com.google.android.gms.**

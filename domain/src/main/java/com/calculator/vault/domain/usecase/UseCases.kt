@@ -4,6 +4,9 @@ import com.calculator.vault.domain.model.FakeContent
 import com.calculator.vault.domain.model.InstalledApp
 import com.calculator.vault.domain.model.IntruderLog
 import com.calculator.vault.domain.model.PinValidationResult
+import com.calculator.vault.domain.model.PremiumStatus
+import com.calculator.vault.domain.model.SecureBookmark
+import com.calculator.vault.domain.model.SecureNote
 import com.calculator.vault.domain.model.SecuritySettings
 import com.calculator.vault.domain.model.VaultApp
 import com.calculator.vault.domain.model.VaultBackup
@@ -11,9 +14,13 @@ import com.calculator.vault.domain.model.VaultSessionState
 import com.calculator.vault.domain.repository.FakeVaultRepository
 import com.calculator.vault.domain.repository.IntruderRepository
 import com.calculator.vault.domain.repository.InstalledAppRepository
+import com.calculator.vault.domain.repository.PremiumRepository
+import com.calculator.vault.domain.repository.SecureBookmarkRepository
+import com.calculator.vault.domain.repository.SecureNoteRepository
 import com.calculator.vault.domain.repository.SecurityRepository
 import com.calculator.vault.domain.repository.VaultRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 class IsSetupCompleteUseCase @Inject constructor(
@@ -155,8 +162,21 @@ class GetInstalledAppsUseCase @Inject constructor(
 
 class AddAppToVaultUseCase @Inject constructor(
     private val vaultRepository: VaultRepository,
+    private val premiumRepository: PremiumRepository,
 ) {
-    suspend operator fun invoke(app: VaultApp) = vaultRepository.addApp(app)
+    sealed class Result {
+        data object Added : Result()
+        data object LimitReached : Result()
+    }
+
+    suspend operator fun invoke(app: VaultApp, freeLimit: Int): Result {
+        val count = vaultRepository.observeVaultApps(includeFake = false).first().size
+        if (!premiumRepository.canAddMoreVaultApps(count, freeLimit)) {
+            return Result.LimitReached
+        }
+        vaultRepository.addApp(app)
+        return Result.Added
+    }
 }
 
 class RemoveAppFromVaultUseCase @Inject constructor(
@@ -232,4 +252,56 @@ class CheckSessionExpiredUseCase @Inject constructor(
     private val securityRepository: SecurityRepository,
 ) {
     suspend operator fun invoke(): Boolean = securityRepository.isSessionExpired()
+}
+
+class ObservePremiumStatusUseCase @Inject constructor(
+    private val premiumRepository: PremiumRepository,
+) {
+    operator fun invoke(): Flow<PremiumStatus> = premiumRepository.observePremiumStatus()
+}
+
+class CanAddAppToVaultUseCase @Inject constructor(
+    private val premiumRepository: PremiumRepository,
+    private val observeVaultAppsUseCase: ObserveVaultAppsUseCase,
+) {
+    suspend operator fun invoke(freeLimit: Int): Boolean {
+        val count = observeVaultAppsUseCase(isFakeVault = false).first().size
+        return premiumRepository.canAddMoreVaultApps(count, freeLimit)
+    }
+}
+
+class ObserveSecureNotesUseCase @Inject constructor(
+    private val secureNoteRepository: SecureNoteRepository,
+) {
+    operator fun invoke(): Flow<List<SecureNote>> = secureNoteRepository.observeNotes()
+}
+
+class UpsertSecureNoteUseCase @Inject constructor(
+    private val secureNoteRepository: SecureNoteRepository,
+) {
+    suspend operator fun invoke(note: SecureNote) = secureNoteRepository.upsert(note)
+}
+
+class DeleteSecureNoteUseCase @Inject constructor(
+    private val secureNoteRepository: SecureNoteRepository,
+) {
+    suspend operator fun invoke(id: Long) = secureNoteRepository.delete(id)
+}
+
+class ObserveSecureBookmarksUseCase @Inject constructor(
+    private val secureBookmarkRepository: SecureBookmarkRepository,
+) {
+    operator fun invoke(): Flow<List<SecureBookmark>> = secureBookmarkRepository.observeBookmarks()
+}
+
+class UpsertSecureBookmarkUseCase @Inject constructor(
+    private val secureBookmarkRepository: SecureBookmarkRepository,
+) {
+    suspend operator fun invoke(bookmark: SecureBookmark) = secureBookmarkRepository.upsert(bookmark)
+}
+
+class DeleteSecureBookmarkUseCase @Inject constructor(
+    private val secureBookmarkRepository: SecureBookmarkRepository,
+) {
+    suspend operator fun invoke(id: Long) = secureBookmarkRepository.delete(id)
 }

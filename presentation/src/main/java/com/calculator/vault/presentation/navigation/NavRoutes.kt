@@ -7,6 +7,8 @@ object NavRoutes {
     const val SETTINGS = "settings"
     const val INTRUDER_LOG = "intruder_log"
     const val ADD_APPS = "add_apps"
+    const val SECURE_NOTES = "secure_notes"
+    const val PREMIUM = "premium"
 
     fun vault(isFakeVault: Boolean): String = "vault/$isFakeVault"
 }

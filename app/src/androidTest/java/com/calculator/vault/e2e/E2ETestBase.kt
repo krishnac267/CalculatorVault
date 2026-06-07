@@ -74,4 +74,27 @@ object E2ETestBase {
         relaunchMainActivity(composeRule)
         composeRule.waitForCalculator()
     }
+
+    /** Same as reset flow but simulates opening calculator from the home launcher lock icon. */
+    fun resetAndOpenCalculatorFromLauncher(
+        composeRule: AndroidComposeTestRule<ActivityScenarioRule<MainActivity>, MainActivity>,
+        resetAppForTestingUseCase: ResetAppForTestingUseCase,
+        setupVaultUseCase: SetupVaultUseCase,
+        securityRepository: SecurityRepository,
+    ) {
+        runBlocking(Dispatchers.Default) {
+            resetAppForTestingUseCase()
+            seedVault(setupVaultUseCase, securityRepository)
+        }
+        composeRule.activityRule.scenario.onActivity { activity ->
+            val intent = Intent(activity, MainActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                putExtra(MainActivity.EXTRA_FROM_LAUNCHER, true)
+            }
+            activity.startActivity(intent)
+            activity.finish()
+        }
+        composeRule.waitForIdle()
+        composeRule.waitForCalculator()
+    }
 }

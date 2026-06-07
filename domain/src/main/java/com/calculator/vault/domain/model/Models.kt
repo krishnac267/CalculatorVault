@@ -69,9 +69,11 @@ enum class VaultSessionState {
 
 /** Export payload for encrypted backup. */
 data class VaultBackup(
-    val version: Int = 1,
+    val version: Int = 2,
     val exportedAt: Long,
     val settings: SecuritySettings,
     val vaultApps: List<VaultApp>,
     val fakeContent: List<FakeContent>,
+    val secureNotes: List<SecureNote> = emptyList(),
+    val secureBookmarks: List<SecureBookmark> = emptyList(),
 )

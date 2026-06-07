@@ -108,4 +108,19 @@ class AuthenticationE2ETest {
         composeRule.onNodeWithTag(TestTags.VAULT_LOCK).performClick()
         composeRule.waitForCalculator()
     }
+
+    @Test
+    fun openedFromLauncher_requiresPinBeforeVault() {
+        E2ETestBase.resetAndOpenCalculatorFromLauncher(
+            composeRule,
+            resetAppForTestingUseCase,
+            setupVaultUseCase,
+            securityRepository,
+        )
+        composeRule.enterPin("9999")
+        composeRule.waitForIdle()
+        composeRule.onNodeWithTag(TestTags.CALC_DISPLAY).assertIsDisplayed()
+        composeRule.enterPin("1234")
+        composeRule.waitForVault(realVault = true)
+    }
 }
