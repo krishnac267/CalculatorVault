@@ -1,0 +1,3 @@
+# Copy to local.properties and set your SDK path.
+# Android Studio generates this automatically on import.
+sdk.dir=C\:\\Users\\krishcho\\AppData\\Local\\Android\\Sdk
