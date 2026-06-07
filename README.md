@@ -50,6 +50,15 @@ GitHub Actions runs on every push/PR to `main`:
 
 Workflow: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 
+## Download APK
+
+Debug build for sideloading (API 26+):
+
+- **GitHub Release:** [v1.0.0-debug](https://github.com/krishnac267/CalculatorVault/releases/tag/v1.0.0-debug)
+- **In repo:** [`releases/CalculatorVault-v1.0.0-debug.apk`](releases/CalculatorVault-v1.0.0-debug.apk)
+
+Package ID: `com.calculator.vault.debug`
+
 ## First Launch Setup
 
 1. Create a **secret PIN** (4–8 digits)
